@@ -14,27 +14,22 @@ class CreateStorageTables extends Migration
     public function up()
     {
 
-        Schema::create('File', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('name', 150);
-            $table->string('stored_name', 150);
-            $table->string('entity', 150);
-            $table->integer('registry');
-            $table->string('extension', 50);
-            $table->text('description')->nullable();
-            $table->integer('uploaded_by')->unsigned();
-            $table->timestamps();
-            $table->softDeletes();
-
-            $table->foreign('uploaded_by')->references('id')->on('User');
-        });
-
         Schema::create('FileGroup', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name', 150);
             $table->string('description', 250);
+        });
+
+        Schema::create('File', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name', 150);
+            $table->string('stored_name', 150);
+            $table->string('extension', 50);
+            $table->text('description')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
+            $table->creation();
         });
 
         Schema::create('File_FileGroup', function (Blueprint $table) {
@@ -46,13 +41,16 @@ class CreateStorageTables extends Migration
             $table->foreign('filegroup')->references('id')->on('FileGroup');
         });
 
-        Schema::create('File_Tag', function (Blueprint $table) {
+        Schema::create('File_Entity', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('file')->unsigned();
-            $table->integer('tag')->unsigned();
+
+            $table->morphs("entity");
+            $table->timestamps();
+            $table->softDeletes();
+            $table->creation();
 
             $table->foreign('file')->references('id')->on('File');
-            $table->foreign('tag')->references('id')->on('Tag');
         });
 
     }
@@ -66,10 +64,10 @@ class CreateStorageTables extends Migration
     {
 
         DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+        Schema::drop('File_Entity');
         Schema::drop('File_FileGroup');
         Schema::drop('File');
         Schema::drop('FileGroup');
-        Schema::drop('File_Tag');
         DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 
